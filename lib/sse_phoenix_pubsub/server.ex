@@ -16,17 +16,16 @@ defmodule SsePhoenixPubsub.Server do
   @type conn :: Conn.t()
   @type topic :: String.t()
   @type topics :: list(topic())
-  @type encoder :: (any()) -> String.t()
-  @type pubsub_info :: {atom(), topics(), encoder()}
+  @type pubsub_info :: {atom(), topics()}
 
   @doc """
   Stream SSE events.
 
-  SsePhoenixPubsub.stream(conn, {MyApp.PubSub, ["time"]})
+  SsePhoenixPubsub.stream(conn, {MyApp.PubSub, ["time"], &inspect(&1, [])})
   """
   @spec stream(conn(), pubsub_info(), chunk_data()) :: conn()
-  def stream(conn, {_, _, enc} = pubsub_info, data \\ []) do
-    chunk = %Chunk{data: enc.(data), retry: Config.retry()}
+  def stream(conn, pubsub_info, data \\ []) do
+    chunk = %Chunk{data: Jason.encode!(data), retry: Config.retry()}
     {:ok, conn} = init_sse(conn, chunk)
     subscribe_sse(pubsub_info)
 
@@ -77,10 +76,10 @@ defmodule SsePhoenixPubsub.Server do
   end
 
   # Listen for Pubsub events (Phoenix Pubsub broadcasts)
-  defp listen_sse(conn, {pubsub_name, _topics, enc} = pubsub_info) do
+  defp listen_sse(conn, {pubsub_name, _topics} = pubsub_info) do
     receive do
       {^pubsub_name, data} ->
-        chunk = %Chunk{data: enc.(data)}
+        chunk = %Chunk{data: Jason.encode!(data)}
         send_sse(conn, pubsub_info, chunk)
 
       {:send_idle} ->
