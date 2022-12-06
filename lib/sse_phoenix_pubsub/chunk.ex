@@ -4,7 +4,7 @@ defmodule SsePhoenixPubsub.Chunk do
   """
 
   @enforce_keys [:data]
-
+  @derive Jason.Encoder
   defstruct [:comment, :event, :data, :id, :retry]
 
   @typedoc """
@@ -37,44 +37,6 @@ defmodule SsePhoenixPubsub.Chunk do
         }
 
   @spec build(t()) :: String.t()
-  def build(%__MODULE__{
-        comment: comment,
-        data: data,
-        event: event,
-        id: id,
-        retry: retry
-      }) do
-    build_field("", comment) <>
-      build_field("id", id) <>
-      build_field("event", event) <>
-      build_data(data) <>
-      build_field("retry", retry) <> "\n"
-  end
-
-  @spec build_data(nil) :: no_return()
-  defp build_data(nil) do
-    raise("Chunk data can't be blank!")
-  end
-
-  @spec build_data(list(String.t())) :: String.t()
-  defp build_data(data_list) when is_list(data_list) do
-    Enum.reduce(data_list, "", fn data, acc ->
-      acc <> "data: #{data}\n"
-    end)
-  end
-
-  @spec build_data(String.t()) :: String.t()
-  defp build_data(data) when is_binary(data) do
-    "data: #{data}\n"
-  end
-
-  @spec build_field(String.t(), nil) :: String.t()
-  defp build_field(_, nil) do
-    ""
-  end
-
-  @spec build_field(String.t(), String.t() | integer()) :: String.t()
-  defp build_field(field, value) do
-    "#{field}: #{value}\n"
-  end
+  def build(m) when is_struct(m, __MODULE__),
+    do: Jason.encode!(m) <> "\n"
 end

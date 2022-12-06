@@ -25,7 +25,7 @@ defmodule SsePhoenixPubsub.Server do
   """
   @spec stream(conn(), pubsub_info(), chunk_data()) :: conn()
   def stream(conn, pubsub_info, data \\ []) do
-    chunk = %Chunk{data: Jason.encode!(data), retry: Config.retry()}
+    chunk = %Chunk{data: data, retry: Config.retry()}
     {:ok, conn} = init_sse(conn, chunk)
     subscribe_sse(pubsub_info)
 
@@ -79,7 +79,7 @@ defmodule SsePhoenixPubsub.Server do
   defp listen_sse(conn, {pubsub_name, _topics} = pubsub_info) do
     receive do
       {^pubsub_name, data} ->
-        chunk = %Chunk{data: Jason.encode!(data)}
+        chunk = %Chunk{data: data}
         send_sse(conn, pubsub_info, chunk)
 
       {:send_idle} ->
