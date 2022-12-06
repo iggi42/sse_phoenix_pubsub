@@ -4,7 +4,7 @@ defmodule SsePhoenixPubsub.Chunk do
   """
 
   @enforce_keys [:data]
-  # @derive Jason.Encoder
+  @derive Jason.Encoder
   defstruct [:comment, :event, :data, :id, :retry]
 
   @typedoc """
