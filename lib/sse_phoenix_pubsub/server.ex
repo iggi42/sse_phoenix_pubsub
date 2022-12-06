@@ -47,7 +47,7 @@ defmodule SsePhoenixPubsub.Server do
   end
 
   # Subscribe to pubsub topics
-  defp subscribe_sse({pubsub_name, topics, _encoder}) do
+  defp subscribe_sse({pubsub_name, topics}) do
     for c <- topics do
       Logger.debug(fn -> "Subscribing #{inspect(self())} to topic #{c}" end)
       PubSub.subscribe(pubsub_name, c)
@@ -55,7 +55,7 @@ defmodule SsePhoenixPubsub.Server do
   end
 
   # Unsubscribe from pubsub topics
-  defp unsubscribe_sse({pubsub_name, topics, _encoder}) do
+  defp unsubscribe_sse({pubsub_name, topics}) do
     for c <- topics do
       Logger.debug(fn -> "Unsubscribing #{inspect(self())} from topic #{c}" end)
       PubSub.unsubscribe(pubsub_name, c)
