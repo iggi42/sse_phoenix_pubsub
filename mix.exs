@@ -9,7 +9,8 @@ defmodule SsePhoenixPubsub.MixProject do
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
-      deps: deps()
+      deps: deps(),
+      dialyzer: dialyzer()
     ]
   end
 
@@ -41,7 +42,17 @@ defmodule SsePhoenixPubsub.MixProject do
       {:plug, ">= 1.4.5"},
       {:phoenix_pubsub, "~> 2.0"},
       {:jason, "~> 1.0"},
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.2", runtime: false, only: [:dev]}
+    ]
+  end
+
+  defp dialyzer do
+    [
+      plt_add_apps: [:mix],
+      # Store the plts somewhere easy to cache, including shared plts
+      # Hardcoding 'dev' here is ok, since dialyxir is `only: :dev`
+      plt_core_path: "_build/dev/"
     ]
   end
 end
