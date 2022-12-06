@@ -16,7 +16,8 @@ defmodule SsePhoenixPubsub.Server do
   @type conn :: Conn.t()
   @type topic :: String.t()
   @type topics :: list(topic())
-  @type pubsub_info :: {atom(), topics()}
+  @type encoder :: (any()) -> String.t()
+  @type pubsub_info :: {atom(), topics(), encoder()}
 
   @doc """
   Stream SSE events.
@@ -24,7 +25,7 @@ defmodule SsePhoenixPubsub.Server do
   SsePhoenixPubsub.stream(conn, {MyApp.PubSub, ["time"]})
   """
   @spec stream(conn(), pubsub_info(), chunk_data()) :: conn()
-  def stream(conn, pubsub_info, data) do
+  def stream(conn, pubsub_info, data, encoder \\ &inspect(&1, [])) do
     chunk = %Chunk{data: data, retry: Config.retry()}
     {:ok, conn} = init_sse(conn, chunk)
     subscribe_sse(pubsub_info)
@@ -47,7 +48,7 @@ defmodule SsePhoenixPubsub.Server do
   end
 
   # Subscribe to pubsub topics
-  defp subscribe_sse({pubsub_name, topics}) do
+  defp subscribe_sse({pubsub_name, topics, _encoder}) do
     for c <- topics do
       Logger.debug(fn -> "Subscribing #{inspect(self())} to topic #{c}" end)
       PubSub.subscribe(pubsub_name, c)
@@ -55,7 +56,7 @@ defmodule SsePhoenixPubsub.Server do
   end
 
   # Unsubscribe from pubsub topics
-  defp unsubscribe_sse({pubsub_name, topics}) do
+  defp unsubscribe_sse({pubsub_name, topics, _encoder}) do
     for c <- topics do
       Logger.debug(fn -> "Unsubscribing #{inspect(self())} from topic #{c}" end)
       PubSub.unsubscribe(pubsub_name, c)
@@ -76,10 +77,10 @@ defmodule SsePhoenixPubsub.Server do
   end
 
   # Listen for Pubsub events (Phoenix Pubsub broadcasts)
-  defp listen_sse(conn, {pubsub_name, _topics} = pubsub_info) do
+  defp listen_sse(conn, {pubsub_name, _topics, enc} = pubsub_info) do
     receive do
       {^pubsub_name, data} ->
-        chunk = %Chunk{data: data}
+        chunk = %Chunk{data: enc.(data)}
         send_sse(conn, pubsub_info, chunk)
 
       {:send_idle} ->
