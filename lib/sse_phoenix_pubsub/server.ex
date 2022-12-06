@@ -25,8 +25,8 @@ defmodule SsePhoenixPubsub.Server do
   SsePhoenixPubsub.stream(conn, {MyApp.PubSub, ["time"]})
   """
   @spec stream(conn(), pubsub_info(), chunk_data()) :: conn()
-  def stream(conn, pubsub_info, data, encoder \\ &inspect(&1, [])) do
-    chunk = %Chunk{data: data, retry: Config.retry()}
+  def stream(conn, {_, _, enc} = pubsub_info, data \\ []) do
+    chunk = %Chunk{data: enc.(data), retry: Config.retry()}
     {:ok, conn} = init_sse(conn, chunk)
     subscribe_sse(pubsub_info)
 
