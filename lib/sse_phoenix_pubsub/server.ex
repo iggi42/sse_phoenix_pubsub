@@ -64,6 +64,8 @@ defmodule SsePhoenixPubsub.Server do
 
   # Send SSE chunk
   defp send_sse(conn, pubsub_info, chunk) do
+    Logger.warn("chunky: " <> inspect(chunk, pretty: true))
+
     case Conn.chunk(conn, Chunk.build(chunk)) do
       {:ok, conn} ->
         reset_timeout()
@@ -92,7 +94,8 @@ defmodule SsePhoenixPubsub.Server do
         unsubscribe_sse(pubsub_info)
         Process.exit(self(), :normal)
 
-      _ ->
+      msg ->
+        Logger.warn("[phoenix_sse] ignore msg: " <> inspect(msg))
         listen_sse(conn, pubsub_info)
     end
   end
